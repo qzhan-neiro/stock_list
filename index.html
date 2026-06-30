@@ -303,8 +303,37 @@
     margin-left: auto;
     flex-shrink: 0;
     display: flex;
+    align-items: center;
     gap: 6px;
   }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-faint);
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+
+  .copy-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+    background: var(--surface-hover);
+  }
+
+  .copy-btn.copied {
+    color: #5fbf7a;
+    border-color: #5fbf7a;
+  }
+
+  .copy-btn svg { width: 14px; height: 14px; pointer-events: none; }
 
   .badge {
     font-size: 11px;
@@ -474,6 +503,9 @@
         </div>
         <div class="badges">
           ${s.isFavorite ? '<span class="badge">关注</span>' : ''}
+          <button class="copy-btn" data-code="${escapeHtml(s.code)}" data-name="${escapeHtml(s.name)}" title="复制代码和名称" aria-label="复制">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
         </div>
       </li>
     `;
@@ -486,9 +518,48 @@
     render();
   }
 
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    // 兼容非 https / 旧浏览器的后备方案
+    return new Promise((resolve, reject) => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        resolve();
+      } catch (err) {
+        reject(err);
+      } finally {
+        document.body.removeChild(ta);
+      }
+    });
+  }
+
   listEl.addEventListener('click', e => {
-    const btn = e.target.closest('.star');
-    if (btn) toggleFavorite(btn.dataset.code);
+    const star = e.target.closest('.star');
+    if (star) { toggleFavorite(star.dataset.code); return; }
+
+    const copyBtn = e.target.closest('.copy-btn');
+    if (copyBtn) {
+      const text = `${copyBtn.dataset.code} ${copyBtn.dataset.name}`;
+      copyText(text).then(() => {
+        copyBtn.classList.add('copied');
+        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        }, 1200);
+      }).catch(() => {
+        setStatus('复制失败，请手动选择文本复制', 'error');
+      });
+    }
   });
 
   let debounceTimer = null;
