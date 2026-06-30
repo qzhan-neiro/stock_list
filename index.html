@@ -16,6 +16,9 @@
     --accent: #e14b43;
     --accent-dim: rgba(225, 75, 67, 0.14);
     --accent-border: rgba(225, 75, 67, 0.45);
+    --accent2: #4d8df0;
+    --accent2-dim: rgba(77, 141, 240, 0.14);
+    --accent2-border: rgba(77, 141, 240, 0.45);
     --mono: 'SF Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   }
@@ -35,7 +38,7 @@
   }
 
   .app {
-    max-width: 600px;
+    max-width: 640px;
     margin: 0 auto;
     padding: 40px 20px 80px;
   }
@@ -69,6 +72,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
   }
 
   .status-line.error { color: var(--accent); }
@@ -105,10 +109,19 @@
     background: var(--surface-hover);
   }
 
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+  }
+
   .filter-row {
     display: flex;
     gap: 8px;
-    margin-bottom: 18px;
+    margin-bottom: 6px;
     flex-wrap: wrap;
   }
 
@@ -133,6 +146,12 @@
     color: #ff7a72;
   }
 
+  .chip.sector.active {
+    background: var(--accent2-dim);
+    border-color: var(--accent2-border);
+    color: #8ab4f8;
+  }
+
   .chip.import-toggle {
     margin-left: auto;
     border-style: dashed;
@@ -150,7 +169,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px;
-    margin-bottom: 18px;
+    margin: 14px 0 18px;
   }
 
   .import-panel textarea {
@@ -203,7 +222,7 @@
 
   .list {
     list-style: none;
-    margin: 0;
+    margin: 14px 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -225,6 +244,7 @@
   .row:hover { background: var(--surface-hover); }
 
   .row.is-fav { border-left-color: var(--accent); }
+  .row.is-sector:not(.is-fav) { border-left-color: var(--accent2-border); }
 
   .star {
     background: none;
@@ -244,6 +264,7 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+    flex: 1;
   }
 
   .code {
@@ -261,9 +282,31 @@
     text-overflow: ellipsis;
   }
 
-  .badge {
+  .tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+
+  .tag {
+    font-size: 10.5px;
+    font-family: var(--mono);
+    color: #8ab4f8;
+    background: var(--accent2-dim);
+    border: 1px solid var(--accent2-border);
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+
+  .badges {
     margin-left: auto;
     flex-shrink: 0;
+    display: flex;
+    gap: 6px;
+  }
+
+  .badge {
     font-size: 11px;
     font-family: var(--mono);
     color: var(--accent);
@@ -271,6 +314,7 @@
     border: 1px solid var(--accent-border);
     padding: 3px 8px;
     border-radius: 999px;
+    white-space: nowrap;
   }
 
   .empty {
@@ -298,11 +342,14 @@
 
   <div class="status-line" id="statusLine"></div>
 
-  <div class="filter-row">
+  <div class="filter-row" id="baseFilterRow">
     <button class="chip active" data-filter="all">全部<span class="count" id="countAll"></span></button>
-    <button class="chip" data-filter="fav">我的推荐<span class="count" id="countFav"></span></button>
+    <button class="chip" data-filter="fav">个人关注<span class="count" id="countFav"></span></button>
     <button class="chip import-toggle" id="importToggle">导入数据</button>
   </div>
+
+  <div class="section-label" id="sectorLabel" hidden>热门板块（来自 sectors.json）</div>
+  <div class="filter-row" id="sectorFilterRow"></div>
 
   <div class="import-panel" id="importPanel" hidden>
     <textarea id="importText" placeholder='粘贴股票JSON数组，例如：
@@ -319,9 +366,13 @@
 </div>
 
 <script>
-  // 数据来源：默认从“统计”目录下的 all_a_stocks.json 读取
-  // 如果你的目录结构不同，改这里的路径就行（相对路径是相对于本 html 文件的位置）
+  // ============ 数据来源配置 ============
+  // 1) 全市场股票列表（代码 + 名称）
   const DATA_URL = 'all_a_stocks.json';
+  // 2) 板块映射表：{ "板块名": ["代码1","代码2", ...], ... }
+  //    管理推荐只需要编辑这一个文件，不用碰股票主数据，也不用手动点星标
+  const SECTORS_URL = 'sectors.json';
+
   const RENDER_LIMIT = 300; // 单次最多渲染多少行，避免全市场数据量太大导致卡顿
 
   // 在 all_a_stocks.json 加载失败时使用的兜底示例数据
@@ -330,7 +381,13 @@
     { code: "000002", name: "万  科Ａ", isFavorite: true }
   ];
 
+  // code -> [板块名, ...]
+  let sectorMap = {};
+  // 板块名 -> 数量（基于当前 stocks 中实际存在的代码）
+  let sectorCounts = {};
+
   let currentFilter = 'all'; // 'all' | 'fav'
+  let activeSector = null;   // 选中的板块名，null 表示不按板块过滤
 
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('emptyState');
@@ -338,6 +395,8 @@
   const countAllEl = document.getElementById('countAll');
   const countFavEl = document.getElementById('countFav');
   const statusEl = document.getElementById('statusLine');
+  const sectorLabel = document.getElementById('sectorLabel');
+  const sectorFilterRow = document.getElementById('sectorFilterRow');
 
   function normalize(str) {
     return String(str)
@@ -354,6 +413,30 @@
       .replace(/"/g, '&quot;');
   }
 
+  function rebuildSectorCounts() {
+    sectorCounts = {};
+    stocks.forEach(s => {
+      (sectorMap[s.code] || []).forEach(name => {
+        sectorCounts[name] = (sectorCounts[name] || 0) + 1;
+      });
+    });
+  }
+
+  function renderSectorChips() {
+    const names = Object.keys(sectorCounts).sort((a, b) => sectorCounts[b] - sectorCounts[a]);
+    if (names.length === 0) {
+      sectorLabel.hidden = true;
+      sectorFilterRow.innerHTML = '';
+      return;
+    }
+    sectorLabel.hidden = false;
+    sectorFilterRow.innerHTML = names.map(name => `
+      <button class="chip sector${activeSector === name ? ' active' : ''}" data-sector="${escapeHtml(name)}">
+        ${escapeHtml(name)}<span class="count">（${sectorCounts[name]}）</span>
+      </button>
+    `).join('');
+  }
+
   function render() {
     const q = normalize(searchInput.value.trim());
 
@@ -363,6 +446,7 @@
 
     let filtered = stocks.filter(s => {
       if (currentFilter === 'fav' && !s.isFavorite) return false;
+      if (activeSector && !(sectorMap[s.code] || []).includes(activeSector)) return false;
       if (!q) return true;
       return normalize(s.code).includes(q) || normalize(s.name).includes(q);
     });
@@ -377,16 +461,23 @@
     const truncated = filtered.length > RENDER_LIMIT;
     const toRender = truncated ? filtered.slice(0, RENDER_LIMIT) : filtered;
 
-    listEl.innerHTML = toRender.map(s => `
-      <li class="row${s.isFavorite ? ' is-fav' : ''}">
-        <button class="star" data-code="${escapeHtml(s.code)}" title="切换推荐" aria-label="切换推荐">${s.isFavorite ? '★' : '☆'}</button>
+    listEl.innerHTML = toRender.map(s => {
+      const tags = sectorMap[s.code] || [];
+      const isSector = tags.length > 0;
+      return `
+      <li class="row${s.isFavorite ? ' is-fav' : ''}${isSector ? ' is-sector' : ''}">
+        <button class="star" data-code="${escapeHtml(s.code)}" title="切换个人关注" aria-label="切换个人关注">${s.isFavorite ? '★' : '☆'}</button>
         <div class="info">
           <span class="code">${escapeHtml(s.code)}</span>
           <span class="name">${escapeHtml(s.name)}</span>
+          ${tags.length ? `<span class="tags">${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</span>` : ''}
         </div>
-        ${s.isFavorite ? '<span class="badge">推荐</span>' : ''}
+        <div class="badges">
+          ${s.isFavorite ? '<span class="badge">关注</span>' : ''}
+        </div>
       </li>
-    `).join('') + (truncated ? `<li class="empty" style="padding:20px 0;">仅显示前 ${RENDER_LIMIT} 条（共匹配 ${filtered.length} 条），输入更具体的关键词缩小范围</li>` : '');
+    `;
+    }).join('') + (truncated ? `<li class="empty" style="padding:20px 0;">仅显示前 ${RENDER_LIMIT} 条（共匹配 ${filtered.length} 条），输入更具体的关键词或选择板块缩小范围</li>` : '');
   }
 
   function toggleFavorite(code) {
@@ -406,16 +497,25 @@
     debounceTimer = setTimeout(render, 120);
   });
 
-  document.querySelectorAll('.chip[data-filter]').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('.chip[data-filter]').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      currentFilter = chip.dataset.filter;
-      render();
-    });
+  document.getElementById('baseFilterRow').addEventListener('click', e => {
+    const chip = e.target.closest('.chip[data-filter]');
+    if (!chip) return;
+    document.querySelectorAll('#baseFilterRow .chip[data-filter]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    render();
   });
 
-  // 导入面板
+  sectorFilterRow.addEventListener('click', e => {
+    const chip = e.target.closest('.chip[data-sector]');
+    if (!chip) return;
+    const name = chip.dataset.sector;
+    activeSector = activeSector === name ? null : name; // 再点一次取消选中
+    renderSectorChips();
+    render();
+  });
+
+  // 导入面板（仍可用于手动粘贴股票数据，板块数据请用 sectors.json 管理）
   const importToggle = document.getElementById('importToggle');
   const importPanel = document.getElementById('importPanel');
   const importText = document.getElementById('importText');
@@ -446,7 +546,6 @@
     try {
       parsed = JSON.parse(raw);
     } catch (e1) {
-      // 容错：自动去掉多余的尾逗号后再尝试一次
       try {
         parsed = JSON.parse(raw.replace(/,(\s*[\]}])/g, '$1'));
       } catch (e2) {
@@ -467,6 +566,8 @@
     importHint.className = 'import-hint ok';
     importPanel.hidden = true;
     importText.value = '';
+    rebuildSectorCounts();
+    renderSectorChips();
     render();
   });
 
@@ -486,8 +587,43 @@
     }
   }
 
+  // 把 sectors.json 的 { "板块名": ["代码", ...] } 结构转成 code -> [板块名,...]
+  function buildSectorMapFromObject(obj) {
+    const map = {};
+    Object.keys(obj).forEach(sectorName => {
+      const codes = obj[sectorName];
+      if (!Array.isArray(codes)) return;
+      codes.forEach(code => {
+        if (typeof code !== 'string') return;
+        if (!map[code]) map[code] = [];
+        if (!map[code].includes(sectorName)) map[code].push(sectorName);
+      });
+    });
+    return map;
+  }
+
+  async function loadSectors() {
+    try {
+      const res = await fetch(SECTORS_URL);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const parsed = parseLenient(text);
+      if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
+        throw new Error('sectors.json 应为对象 { "板块名": ["代码",...] }');
+      }
+      sectorMap = buildSectorMapFromObject(parsed);
+      return true;
+    } catch (err) {
+      // 板块文件不是必须的，加载失败不影响主列表，只是不显示板块筛选
+      sectorMap = {};
+      console.warn('未能加载 sectors.json：', err.message);
+      return false;
+    }
+  }
+
   async function loadData() {
     setStatus(`正在加载 ${DATA_URL} …`, '');
+    let stockOk = false;
     try {
       const res = await fetch(DATA_URL);
       if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -497,7 +633,7 @@
       const cleaned = parsed.filter(item => item && typeof item.code === 'string' && typeof item.name === 'string');
       if (cleaned.length === 0) throw new Error('没有解析到有效的股票数据');
       stocks = cleaned;
-      setStatus(`已从 ${DATA_URL} 加载 ${cleaned.length} 条`, 'ok');
+      stockOk = true;
     } catch (err) {
       setStatus(
         `无法加载 ${DATA_URL}（${err.message}）。若是直接双击打开 html 文件，浏览器会拦截本地文件读取——请改用本地服务器打开（如在该目录运行 python -m http.server 后访问 http://localhost:8000），或用下方"导入数据"手动粘贴。当前显示的是示例数据。`,
@@ -505,7 +641,23 @@
         true
       );
     }
+
+    const sectorsOk = await loadSectors();
+
+    if (stockOk) {
+      const sectorNote = sectorsOk ? `，板块 ${Object.keys(sectorCountsFromMap()).length} 个` : '（未加载到 sectors.json，板块筛选不可用）';
+      setStatus(`已从 ${DATA_URL} 加载 ${stocks.length} 条${sectorNote}`, 'ok');
+    }
+
+    rebuildSectorCounts();
+    renderSectorChips();
     render();
+  }
+
+  function sectorCountsFromMap() {
+    const set = {};
+    Object.values(sectorMap).forEach(arr => arr.forEach(n => set[n] = true));
+    return set;
   }
 
   loadData();
