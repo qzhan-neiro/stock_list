@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>股票自选搜索</title>
+<title>股票搜索</title>
 <style>
   :root {
     --bg: #11141a;
@@ -13,12 +13,7 @@
     --text: #e7e9ee;
     --text-dim: #8b92a1;
     --text-faint: #565d6c;
-    --accent: #e14b43;
-    --accent-dim: rgba(225, 75, 67, 0.14);
     --accent-border: rgba(225, 75, 67, 0.45);
-    --accent2: #4d8df0;
-    --accent2-dim: rgba(77, 141, 240, 0.14);
-    --accent2-border: rgba(77, 141, 240, 0.45);
     --mono: 'SF Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   }
@@ -43,7 +38,7 @@
     padding: 40px 20px 80px;
   }
 
-  header { margin-bottom: 28px; }
+  header { margin-bottom: 24px; }
 
   .eyebrow {
     font-family: var(--mono);
@@ -61,33 +56,7 @@
     letter-spacing: -0.01em;
   }
 
-  .search-wrap { margin-bottom: 8px; }
-
-  .status-line {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-faint);
-    margin-bottom: 14px;
-    min-height: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .status-line.error { color: var(--accent); }
-  .status-line.ok { color: #5fbf7a; }
-
-  .status-line button {
-    background: none;
-    border: none;
-    color: inherit;
-    text-decoration: underline;
-    cursor: pointer;
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 0;
-  }
+  .search-wrap { margin-bottom: 16px; }
 
   #searchInput {
     width: 100%;
@@ -109,120 +78,15 @@
     background: var(--surface-hover);
   }
 
-  .section-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    color: var(--text-faint);
-    margin: 18px 0 8px;
-    text-transform: uppercase;
-  }
-
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-  }
-
-  .chip {
-    appearance: none;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-family: var(--sans);
+  .hint {
     font-size: 13px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .chip:hover { background: var(--surface-hover); color: var(--text); }
-
-  .chip.active {
-    background: var(--accent-dim);
-    border-color: var(--accent-border);
-    color: #ff7a72;
-  }
-
-  .chip.sector.active {
-    background: var(--accent2-dim);
-    border-color: var(--accent2-border);
-    color: #8ab4f8;
-  }
-
-  .chip.import-toggle {
-    margin-left: auto;
-    border-style: dashed;
-  }
-
-  .chip .count {
-    font-family: var(--mono);
-    color: inherit;
-    opacity: 0.7;
-    margin-left: 4px;
-  }
-
-  .import-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    margin: 14px 0 18px;
-  }
-
-  .import-panel textarea {
-    width: 100%;
-    min-height: 110px;
-    resize: vertical;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    padding: 10px;
-    outline: none;
-  }
-
-  .import-panel textarea:focus { border-color: var(--accent-border); }
-
-  .import-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .import-actions button {
-    border: none;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font-size: 13px;
-    font-family: var(--sans);
-    cursor: pointer;
-  }
-
-  #importBtn { background: var(--accent); color: #fff; font-weight: 600; }
-  #importBtn:hover { background: #d23f37; }
-
-  #importCancel { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
-  #importCancel:hover { color: var(--text); }
-
-  .import-hint {
-    margin-top: 8px;
-    font-size: 12px;
-    font-family: var(--mono);
     color: var(--text-faint);
-    min-height: 14px;
+    margin-bottom: 8px;
   }
-
-  .import-hint.error { color: var(--accent); }
-  .import-hint.ok { color: #5fbf7a; }
 
   .list {
     list-style: none;
-    margin: 14px 0 0;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -231,41 +95,16 @@
 
   .row {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 4px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid transparent;
     border-radius: 10px;
     padding: 12px 14px;
     transition: background 0.15s ease;
   }
 
   .row:hover { background: var(--surface-hover); }
-
-  .row.is-fav { border-left-color: var(--accent); }
-  .row.is-sector:not(.is-fav) { border-left-color: var(--accent2-border); }
-
-  .star {
-    background: none;
-    border: none;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-    color: var(--text-faint);
-    padding: 2px;
-    flex-shrink: 0;
-  }
-
-  .row.is-fav .star { color: var(--accent); }
-
-  .info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    flex: 1;
-  }
 
   .code {
     font-family: var(--mono);
@@ -277,73 +116,7 @@
   .name {
     font-size: 15px;
     color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .tags {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-    margin-top: 2px;
-  }
-
-  .tag {
-    font-size: 10.5px;
-    font-family: var(--mono);
-    color: #8ab4f8;
-    background: var(--accent2-dim);
-    border: 1px solid var(--accent2-border);
-    padding: 1px 6px;
-    border-radius: 999px;
-  }
-
-  .badges {
-    margin-left: auto;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .copy-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-faint);
-    width: 28px;
-    height: 28px;
-    border-radius: 7px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.15s ease;
-  }
-
-  .copy-btn:hover {
-    color: var(--text);
-    border-color: var(--text-dim);
-    background: var(--surface-hover);
-  }
-
-  .copy-btn.copied {
-    color: #5fbf7a;
-    border-color: #5fbf7a;
-  }
-
-  .copy-btn svg { width: 14px; height: 14px; pointer-events: none; }
-
-  .badge {
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--accent);
-    background: var(--accent-dim);
-    border: 1px solid var(--accent-border);
-    padding: 3px 8px;
-    border-radius: 999px;
-    white-space: nowrap;
+    word-break: break-all;
   }
 
   .empty {
@@ -361,71 +134,32 @@
 <body>
 <div class="app">
   <header>
-    <div class="eyebrow">Watchlist · 自选股</div>
-    <h1>股票自选搜索</h1>
+    <div class="eyebrow">Stocks</div>
+    <h1>股票搜索</h1>
   </header>
 
   <div class="search-wrap">
     <input id="searchInput" type="text" placeholder="输入代码或名称搜索，如 000001 / 平安" autocomplete="off">
   </div>
 
-  <div class="status-line" id="statusLine"></div>
-
-  <div class="filter-row" id="baseFilterRow">
-    <button class="chip active" data-filter="all">全部<span class="count" id="countAll"></span></button>
-    <button class="chip" data-filter="fav">个人关注<span class="count" id="countFav"></span></button>
-    <button class="chip import-toggle" id="importToggle">导入数据</button>
-  </div>
-
-  <div class="section-label" id="sectorLabel" hidden>热门板块（来自 sectors.json）</div>
-  <div class="filter-row" id="sectorFilterRow"></div>
-
-  <div class="import-panel" id="importPanel" hidden>
-    <textarea id="importText" placeholder='粘贴股票JSON数组，例如：
-[{"code":"000001","name":"平安银行"},{"code":"000002","name":"万科A","isFavorite":true}]'></textarea>
-    <div class="import-actions">
-      <button id="importBtn">导入并替换</button>
-      <button id="importCancel">取消</button>
-    </div>
-    <div class="import-hint" id="importHint"></div>
-  </div>
-
+  <div class="hint" id="hintText">正在加载股票数据...</div>
   <ul class="list" id="list"></ul>
   <div class="empty" id="emptyState" hidden>没有找到匹配的股票</div>
 </div>
 
 <script>
-  // ============ 数据来源配置 ============
-  // 1) 全市场股票列表（代码 + 名称）
   const DATA_URL = 'all_a_stocks.json';
-  // 2) 板块映射表：{ "板块名": ["代码1","代码2", ...], ... }
-  //    管理推荐只需要编辑这一个文件，不用碰股票主数据，也不用手动点星标
-  const SECTORS_URL = 'sectors.json';
+  const RENDER_LIMIT = 300;
 
-  const RENDER_LIMIT = 300; // 单次最多渲染多少行，避免全市场数据量太大导致卡顿
-
-  // 在 all_a_stocks.json 加载失败时使用的兜底示例数据
   let stocks = [
-    { code: "000001", name: "平安银行" },
-    { code: "000002", name: "万  科Ａ", isFavorite: true }
+    { code: '000001', name: '平安银行' },
+    { code: '000002', name: '万 科Ａ' }
   ];
-
-  // code -> [板块名, ...]
-  let sectorMap = {};
-  // 板块名 -> 数量（基于当前 stocks 中实际存在的代码）
-  let sectorCounts = {};
-
-  let currentFilter = 'all'; // 'all' | 'fav'
-  let activeSector = null;   // 选中的板块名，null 表示不按板块过滤
 
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('emptyState');
   const searchInput = document.getElementById('searchInput');
-  const countAllEl = document.getElementById('countAll');
-  const countFavEl = document.getElementById('countFav');
-  const statusEl = document.getElementById('statusLine');
-  const sectorLabel = document.getElementById('sectorLabel');
-  const sectorFilterRow = document.getElementById('sectorFilterRow');
+  const hintEl = document.getElementById('hintText');
 
   function normalize(str) {
     return String(str)
@@ -442,214 +176,6 @@
       .replace(/"/g, '&quot;');
   }
 
-  function rebuildSectorCounts() {
-    sectorCounts = {};
-    stocks.forEach(s => {
-      (sectorMap[s.code] || []).forEach(name => {
-        sectorCounts[name] = (sectorCounts[name] || 0) + 1;
-      });
-    });
-  }
-
-  function renderSectorChips() {
-    const names = Object.keys(sectorCounts).sort((a, b) => sectorCounts[b] - sectorCounts[a]);
-    if (names.length === 0) {
-      sectorLabel.hidden = true;
-      sectorFilterRow.innerHTML = '';
-      return;
-    }
-    sectorLabel.hidden = false;
-    sectorFilterRow.innerHTML = names.map(name => `
-      <button class="chip sector${activeSector === name ? ' active' : ''}" data-sector="${escapeHtml(name)}">
-        ${escapeHtml(name)}<span class="count">（${sectorCounts[name]}）</span>
-      </button>
-    `).join('');
-  }
-
-  function render() {
-    const q = normalize(searchInput.value.trim());
-
-    const favCount = stocks.filter(s => s.isFavorite).length;
-    countAllEl.textContent = `（${stocks.length}）`;
-    countFavEl.textContent = `（${favCount}）`;
-
-    let filtered = stocks.filter(s => {
-      if (currentFilter === 'fav' && !s.isFavorite) return false;
-      if (activeSector && !(sectorMap[s.code] || []).includes(activeSector)) return false;
-      if (!q) return true;
-      return normalize(s.code).includes(q) || normalize(s.name).includes(q);
-    });
-
-    if (filtered.length === 0) {
-      listEl.innerHTML = '';
-      emptyEl.hidden = false;
-      return;
-    }
-    emptyEl.hidden = true;
-
-    const truncated = filtered.length > RENDER_LIMIT;
-    const toRender = truncated ? filtered.slice(0, RENDER_LIMIT) : filtered;
-
-    listEl.innerHTML = toRender.map(s => {
-      const tags = sectorMap[s.code] || [];
-      const isSector = tags.length > 0;
-      return `
-      <li class="row${s.isFavorite ? ' is-fav' : ''}${isSector ? ' is-sector' : ''}">
-        <button class="star" data-code="${escapeHtml(s.code)}" title="切换个人关注" aria-label="切换个人关注">${s.isFavorite ? '★' : '☆'}</button>
-        <div class="info">
-          <span class="code">${escapeHtml(s.code)}</span>
-          <span class="name">${escapeHtml(s.name)}</span>
-          ${tags.length ? `<span class="tags">${tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}</span>` : ''}
-        </div>
-        <div class="badges">
-          ${s.isFavorite ? '<span class="badge">关注</span>' : ''}
-          <button class="copy-btn" data-code="${escapeHtml(s.code)}" data-name="${escapeHtml(s.name)}" title="复制代码和名称" aria-label="复制">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          </button>
-        </div>
-      </li>
-    `;
-    }).join('') + (truncated ? `<li class="empty" style="padding:20px 0;">仅显示前 ${RENDER_LIMIT} 条（共匹配 ${filtered.length} 条），输入更具体的关键词或选择板块缩小范围</li>` : '');
-  }
-
-  function toggleFavorite(code) {
-    const s = stocks.find(s => s.code === code);
-    if (s) s.isFavorite = !s.isFavorite;
-    render();
-  }
-
-  function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    // 兼容非 https / 旧浏览器的后备方案
-    return new Promise((resolve, reject) => {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      try {
-        document.execCommand('copy');
-        resolve();
-      } catch (err) {
-        reject(err);
-      } finally {
-        document.body.removeChild(ta);
-      }
-    });
-  }
-
-  listEl.addEventListener('click', e => {
-    const star = e.target.closest('.star');
-    if (star) { toggleFavorite(star.dataset.code); return; }
-
-    const copyBtn = e.target.closest('.copy-btn');
-    if (copyBtn) {
-      const text = `${copyBtn.dataset.code} ${copyBtn.dataset.name}`;
-      copyText(text).then(() => {
-        copyBtn.classList.add('copied');
-        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-        setTimeout(() => {
-          copyBtn.classList.remove('copied');
-          copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
-        }, 1200);
-      }).catch(() => {
-        setStatus('复制失败，请手动选择文本复制', 'error');
-      });
-    }
-  });
-
-  let debounceTimer = null;
-  searchInput.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(render, 120);
-  });
-
-  document.getElementById('baseFilterRow').addEventListener('click', e => {
-    const chip = e.target.closest('.chip[data-filter]');
-    if (!chip) return;
-    document.querySelectorAll('#baseFilterRow .chip[data-filter]').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    currentFilter = chip.dataset.filter;
-    render();
-  });
-
-  sectorFilterRow.addEventListener('click', e => {
-    const chip = e.target.closest('.chip[data-sector]');
-    if (!chip) return;
-    const name = chip.dataset.sector;
-    activeSector = activeSector === name ? null : name; // 再点一次取消选中
-    renderSectorChips();
-    render();
-  });
-
-  // 导入面板（仍可用于手动粘贴股票数据，板块数据请用 sectors.json 管理）
-  const importToggle = document.getElementById('importToggle');
-  const importPanel = document.getElementById('importPanel');
-  const importText = document.getElementById('importText');
-  const importBtn = document.getElementById('importBtn');
-  const importCancel = document.getElementById('importCancel');
-  const importHint = document.getElementById('importHint');
-
-  importToggle.addEventListener('click', () => {
-    importPanel.hidden = !importPanel.hidden;
-    importHint.textContent = '';
-    importHint.className = 'import-hint';
-  });
-
-  importCancel.addEventListener('click', () => {
-    importPanel.hidden = true;
-    importText.value = '';
-    importHint.textContent = '';
-  });
-
-  importBtn.addEventListener('click', () => {
-    const raw = importText.value.trim();
-    if (!raw) {
-      importHint.textContent = '请先粘贴 JSON 数据';
-      importHint.className = 'import-hint error';
-      return;
-    }
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e1) {
-      try {
-        parsed = JSON.parse(raw.replace(/,(\s*[\]}])/g, '$1'));
-      } catch (e2) {
-        importHint.textContent = 'JSON 解析失败，请检查格式：' + e2.message;
-        importHint.className = 'import-hint error';
-        return;
-      }
-    }
-    if (!Array.isArray(parsed)) {
-      importHint.textContent = '数据需要是一个数组 [...]';
-      importHint.className = 'import-hint error';
-      return;
-    }
-    const cleaned = parsed.filter(item => item && typeof item.code === 'string' && typeof item.name === 'string');
-    const skipped = parsed.length - cleaned.length;
-    stocks = cleaned;
-    importHint.textContent = `导入成功，共 ${cleaned.length} 条` + (skipped ? `，跳过 ${skipped} 条格式不正确的数据` : '');
-    importHint.className = 'import-hint ok';
-    importPanel.hidden = true;
-    importText.value = '';
-    rebuildSectorCounts();
-    renderSectorChips();
-    render();
-  });
-
-  function setStatus(text, kind, withRetry) {
-    statusEl.className = 'status-line' + (kind ? ' ' + kind : '');
-    statusEl.innerHTML = escapeHtml(text) + (withRetry ? ' <button id="retryLoad">重试</button>' : '');
-    if (withRetry) {
-      document.getElementById('retryLoad').addEventListener('click', loadData);
-    }
-  }
-
   function parseLenient(text) {
     try {
       return JSON.parse(text);
@@ -658,77 +184,55 @@
     }
   }
 
-  // 把 sectors.json 的 { "板块名": ["代码", ...] } 结构转成 code -> [板块名,...]
-  function buildSectorMapFromObject(obj) {
-    const map = {};
-    Object.keys(obj).forEach(sectorName => {
-      const codes = obj[sectorName];
-      if (!Array.isArray(codes)) return;
-      codes.forEach(code => {
-        if (typeof code !== 'string') return;
-        if (!map[code]) map[code] = [];
-        if (!map[code].includes(sectorName)) map[code].push(sectorName);
-      });
+  function render() {
+    const q = normalize(searchInput.value.trim());
+    const filtered = stocks.filter(item => {
+      if (!q) return true;
+      return normalize(item.code).includes(q) || normalize(item.name).includes(q);
     });
-    return map;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '';
+      emptyEl.hidden = false;
+      return;
+    }
+
+    emptyEl.hidden = true;
+    const truncated = filtered.length > RENDER_LIMIT;
+    const toRender = truncated ? filtered.slice(0, RENDER_LIMIT) : filtered;
+
+    listEl.innerHTML = toRender.map(item => `
+      <li class="row">
+        <span class="code">${escapeHtml(item.code)}</span>
+        <span class="name">${escapeHtml(item.name)}</span>
+      </li>
+    `).join('') + (truncated ? `<li class="empty" style="padding:20px 0;">仅显示前 ${RENDER_LIMIT} 条，请输入更具体的关键词</li>` : '');
   }
 
-  async function loadSectors() {
-    try {
-      const res = await fetch(SECTORS_URL);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const text = await res.text();
-      const parsed = parseLenient(text);
-      if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
-        throw new Error('sectors.json 应为对象 { "板块名": ["代码",...] }');
-      }
-      sectorMap = buildSectorMapFromObject(parsed);
-      return true;
-    } catch (err) {
-      // 板块文件不是必须的，加载失败不影响主列表，只是不显示板块筛选
-      sectorMap = {};
-      console.warn('未能加载 sectors.json：', err.message);
-      return false;
-    }
-  }
+  let debounceTimer = null;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(render, 120);
+  });
 
   async function loadData() {
-    setStatus(`正在加载 ${DATA_URL} …`, '');
-    let stockOk = false;
     try {
       const res = await fetch(DATA_URL);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
       const parsed = parseLenient(text);
       if (!Array.isArray(parsed)) throw new Error('数据格式不是数组');
+
       const cleaned = parsed.filter(item => item && typeof item.code === 'string' && typeof item.name === 'string');
       if (cleaned.length === 0) throw new Error('没有解析到有效的股票数据');
+
       stocks = cleaned;
-      stockOk = true;
+      hintEl.textContent = `共加载 ${stocks.length} 条股票数据`;
+      render();
     } catch (err) {
-      setStatus(
-        `无法加载 ${DATA_URL}（${err.message}）。若是直接双击打开 html 文件，浏览器会拦截本地文件读取——请改用本地服务器打开（如在该目录运行 python -m http.server 后访问 http://localhost:8000），或用下方"导入数据"手动粘贴。当前显示的是示例数据。`,
-        'error',
-        true
-      );
+      hintEl.textContent = `无法加载 ${DATA_URL}，当前显示示例数据：${err.message}`;
+      render();
     }
-
-    const sectorsOk = await loadSectors();
-
-    if (stockOk) {
-      const sectorNote = sectorsOk ? `，板块 ${Object.keys(sectorCountsFromMap()).length} 个` : '（未加载到 sectors.json，板块筛选不可用）';
-      setStatus(`已从 ${DATA_URL} 加载 ${stocks.length} 条${sectorNote}`, 'ok');
-    }
-
-    rebuildSectorCounts();
-    renderSectorChips();
-    render();
-  }
-
-  function sectorCountsFromMap() {
-    const set = {};
-    Object.values(sectorMap).forEach(arr => arr.forEach(n => set[n] = true));
-    return set;
   }
 
   loadData();
