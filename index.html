@@ -2,179 +2,160 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>股票搜索</title>
 <style>
   :root {
-    --bg: #0b1220;
-    --bg-2: #0f172a;
-    --surface: rgba(17, 24, 39, 0.92);
-    --surface-hover: rgba(23, 31, 48, 0.96);
-    --border: rgba(148, 163, 184, 0.16);
-    --border-strong: rgba(94, 234, 212, 0.32);
-    --text: #e5eefc;
-    --text-dim: #9aa7bd;
-    --text-faint: #66748f;
-    --accent: #5eead4;
-    --accent-2: #60a5fa;
-    --shadow: 0 16px 40px rgba(2, 6, 23, 0.34);
+    --bg: #f2f2f7;
+    --card: rgba(255, 255, 255, 0.88);
+    --card-solid: #ffffff;
+    --border: rgba(60, 60, 67, 0.12);
+    --text: #111111;
+    --text-dim: #6e6e73;
+    --text-faint: #8e8e93;
+    --accent: #007aff;
+    --accent-soft: rgba(0, 122, 255, 0.12);
+    --search-bg: rgba(118, 118, 128, 0.12);
+    --shadow: 0 10px 30px rgba(17, 17, 17, 0.06);
     --mono: 'SF Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
   }
 
   * { box-sizing: border-box; }
 
-  html {
-    background:
-      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 32%),
-      radial-gradient(circle at 90% 8%, rgba(94, 234, 212, 0.12), transparent 28%),
-      linear-gradient(180deg, var(--bg), var(--bg-2));
-  }
-
-  body {
+  html, body {
     margin: 0;
-    min-height: 100vh;
+    min-height: 100%;
+    background:
+      radial-gradient(circle at top, rgba(0, 122, 255, 0.08), transparent 28%),
+      linear-gradient(180deg, #f9f9fb 0%, var(--bg) 180px, var(--bg) 100%);
     color: var(--text);
     font-family: var(--sans);
     -webkit-font-smoothing: antialiased;
-    background: transparent;
+  }
+
+  body {
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
   .app {
-    max-width: 760px;
+    width: 100%;
+    max-width: 680px;
     margin: 0 auto;
-    padding: 44px 20px 84px;
+    padding: 8px 14px 28px;
   }
 
-  .hero {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(17, 24, 39, 0.96));
-    border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 24px 22px 20px;
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(14px);
-  }
-
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(135deg, rgba(94, 234, 212, 0.08), transparent 40%),
-      radial-gradient(circle at 100% 0%, rgba(96, 165, 250, 0.12), transparent 32%);
+  .topbar {
+    padding: 8px 4px 14px;
   }
 
   .eyebrow {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .eyebrow::before {
-    content: '';
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.08);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--accent);
+    margin-bottom: 8px;
   }
 
   h1 {
-    position: relative;
-    z-index: 1;
-    font-size: 30px;
-    line-height: 1.15;
-    font-weight: 800;
-    letter-spacing: -0.03em;
     margin: 0;
+    font-size: 32px;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
+    font-weight: 700;
   }
 
   .subtitle {
-    position: relative;
-    z-index: 1;
-    margin-top: 10px;
+    margin-top: 8px;
+    font-size: 15px;
+    line-height: 1.5;
     color: var(--text-dim);
-    font-size: 14px;
-    line-height: 1.6;
+  }
+
+  .search-card {
+    margin-top: 14px;
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 24px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .search-wrap {
-    margin: 18px 0 14px;
     position: relative;
   }
 
-  .search-wrap::before {
-    content: '⌕';
+  .search-icon {
     position: absolute;
-    left: 16px;
+    left: 14px;
     top: 50%;
     transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
     color: var(--text-faint);
-    font-size: 16px;
     pointer-events: none;
   }
 
   #searchInput {
     width: 100%;
-    padding: 15px 16px 15px 42px;
-    font-size: 15px;
-    font-family: var(--sans);
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: var(--search-bg);
     color: var(--text);
-    background: rgba(15, 23, 42, 0.78);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    font-size: 16px;
+    padding: 0 14px 0 42px;
     outline: none;
-    transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
-  #searchInput::placeholder { color: var(--text-faint); }
-
-  #searchInput:hover {
-    background: rgba(17, 24, 39, 0.92);
+  #searchInput::placeholder {
+    color: var(--text-faint);
   }
 
   #searchInput:focus {
-    border-color: var(--border-strong);
-    background: rgba(17, 24, 39, 0.98);
-    box-shadow: 0 0 0 4px rgba(94, 234, 212, 0.08);
+    background: #ffffff;
+    box-shadow: 0 0 0 2px var(--accent-soft);
   }
 
-  .hint-bar {
+  .meta-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-top: 12px;
     flex-wrap: wrap;
   }
 
   .hint {
+    min-width: 0;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.45;
     color: var(--text-dim);
   }
 
   .count-pill {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    color: #b8fff3;
-    background: rgba(94, 234, 212, 0.1);
-    border: 1px solid rgba(94, 234, 212, 0.2);
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
     border-radius: 999px;
-    padding: 6px 10px;
+    padding: 7px 11px;
     white-space: nowrap;
+  }
+
+  .section-title {
+    margin: 18px 4px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-faint);
+    letter-spacing: 0.01em;
   }
 
   .list {
@@ -189,64 +170,100 @@
   .row {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    background: var(--surface);
+    gap: 8px;
+    background: var(--card-solid);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 14px 16px;
-    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.16);
-    transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
-  }
-
-  .row:hover {
-    transform: translateY(-1px);
-    background: var(--surface-hover);
-    border-color: rgba(96, 165, 250, 0.22);
+    box-shadow: 0 4px 16px rgba(17, 17, 17, 0.04);
   }
 
   .code {
     display: inline-flex;
     align-self: flex-start;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f5f5f7;
+    color: var(--text-dim);
     font-family: var(--mono);
     font-size: 12px;
-    color: #98a7c4;
-    background: rgba(148, 163, 184, 0.09);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 999px;
-    padding: 4px 8px;
     letter-spacing: 0.02em;
   }
 
   .name {
-    font-size: 15px;
+    font-size: 18px;
+    line-height: 1.35;
     font-weight: 600;
     color: var(--text);
-    line-height: 1.45;
     word-break: break-all;
   }
 
   .empty {
     text-align: center;
     color: var(--text-faint);
-    font-size: 14px;
-    padding: 64px 0;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 56px 16px;
+    background: rgba(255, 255, 255, 0.54);
+    border: 1px solid rgba(60, 60, 67, 0.08);
+    border-radius: 22px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 
-  .empty::before {
-    content: '⌄';
-    display: block;
-    font-size: 26px;
-    line-height: 1;
-    margin-bottom: 10px;
-    color: rgba(94, 234, 212, 0.5);
+  @media (min-width: 700px) {
+    .app {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .search-card {
+      padding: 16px;
+    }
   }
 
-  @media (max-width: 640px) {
-    .app { padding: 18px 14px 64px; }
-    .hero { border-radius: 18px; padding: 20px 16px 16px; }
-    h1 { font-size: 26px; }
-    #searchInput { border-radius: 14px; }
-    .row { padding: 12px 14px; border-radius: 14px; }
+  @media (max-width: 480px) {
+    .app {
+      padding: 6px 12px 24px;
+    }
+
+    .topbar {
+      padding: 4px 4px 12px;
+    }
+
+    h1 {
+      font-size: 29px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+    }
+
+    .search-card {
+      border-radius: 20px;
+      padding: 12px;
+    }
+
+    #searchInput {
+      height: 46px;
+      font-size: 16px;
+    }
+
+    .row {
+      border-radius: 18px;
+      padding: 13px 14px;
+      gap: 7px;
+    }
+
+    .name {
+      font-size: 17px;
+    }
+
+    .meta-row {
+      align-items: flex-start;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -256,22 +273,27 @@
 </head>
 <body>
 <div class="app">
-  <section class="hero">
-    <div class="eyebrow">Stocks</div>
+  <header class="topbar">
     <h1>股票搜索</h1>
-    <div class="subtitle">输入股票代码或名称，快速筛选你要找的股票。</div>
+  </header>
 
+  <section class="search-card">
     <div class="search-wrap">
-      <input id="searchInput" type="text" placeholder="输入代码或名称搜索，如 000001 / 平安" autocomplete="off">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2"></circle>
+      </svg>
+      <input id="searchInput" type="text" placeholder="搜索代码或名称" autocomplete="off" inputmode="search">
     </div>
 
-    <div class="hint-bar">
+    <div class="meta-row">
       <div class="hint" id="hintText">正在加载股票数据...</div>
       <div class="count-pill" id="countPill">—</div>
     </div>
   </section>
 
-  <ul class="list" id="list" style="margin-top:16px;"></ul>
+  <div class="section-title">搜索结果</div>
+  <ul class="list" id="list"></ul>
   <div class="empty" id="emptyState" hidden>没有找到匹配的股票</div>
 </div>
 
@@ -337,7 +359,7 @@
         <span class="code">${escapeHtml(item.code)}</span>
         <span class="name">${escapeHtml(item.name)}</span>
       </li>
-    `).join('') + (truncated ? `<li class="empty" style="padding:20px 0;">仅显示前 ${RENDER_LIMIT} 条，请输入更具体的关键词</li>` : '');
+    `).join('') + (truncated ? `<li class="empty" style="padding:20px 16px;">仅显示前 ${RENDER_LIMIT} 条，请输入更具体的关键词</li>` : '');
   }
 
   let debounceTimer = null;
@@ -358,7 +380,7 @@
       if (cleaned.length === 0) throw new Error('没有解析到有效的股票数据');
 
       stocks = cleaned;
-      hintEl.textContent = `共加载 ${stocks.length} 条股票数据`;
+      hintEl.textContent = `已加载 ${stocks.length} 条股票数据`;
       render();
     } catch (err) {
       hintEl.textContent = `无法加载 ${DATA_URL}，当前显示示例数据：${err.message}`;
